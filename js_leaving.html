@@ -1,0 +1,98 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script>
+
+function doAction_leaving() {
+    $('.click-once').css('pointer-events','none');
+    var classes = document.getElementById("classes").value;
+    var name = document.getElementById("name").value;
+    var startdata = document.getElementById("startdata").value;
+    var finishdata = document.getElementById("finishdata").value;
+    var startdata = Date.parse(startdata.replace(/-/g, '/')) / 1000;
+    var finishdata = Date.parse(finishdata.replace(/-/g, '/')) / 1000;
+    /*
+    var date=new Date();
+    var last_month=date.getMonth().toString().padStart(2, '0');
+    var this_month=(date.getMonth()+1).toString().padStart(2, '0');
+    var month=last_month+"/"+"23"
+    console.log(last_month);
+    return false;
+    */
+    if (name == "") {
+        alert("名前を入力してください");
+        $('.click-once').css('pointer-events','auto');
+        return false;
+    } else if (Number.isNaN(startdata)) {
+        alert("開始日を入力してください");
+        $('.click-once').css('pointer-events','auto');
+        return false;
+    } else if (Number.isNaN(finishdata)) {
+        alert("終了日を入力してください");
+        $('.click-once').css('pointer-events','auto');
+        return false;
+        
+    } else if (classes == "") {
+        alert("組を入力してください");
+        $('.click-once').css('pointer-events','auto');
+        return false;
+        
+    } else if (startdata > finishdata) {
+            alert("正しい日付を入力してください");
+            $('.click-once').css('pointer-events','auto');
+            return false;
+          }else {
+        var target = document.getElementById("fadeLayer");
+        target.style.visibility = "visible";
+        $('.modal__content').css('overflow','hidden');
+        $('.loading').show();
+        google.script.run.withSuccessHandler(onSuccess_leaving).withFailureHandler(onFailure_leaving).gssDay(name, startdata, finishdata,classes);//サーバー側のスクリプトを呼び出し（非同期）
+    }
+
+}
+
+//成功時
+function onSuccess_leaving(res) {
+    //console.log(res[0]);
+    //console.log(res[1]);
+    //return false;
+    var target = document.getElementById("fadeLayer");
+    $('.loading').fadeOut();
+    $('.modal__content').css('overflow','scroll');
+    target.style.visibility = "hidden";
+    $('.click-once').css('pointer-events','auto');
+    $('#table-display').empty();
+    var day = document.getElementById("day");
+    var time = document.getElementById("time");
+    if (res[0].length != 0) {
+        $(function () {
+            var th = "<tr><th>月日</th><th>時間</th></tr>";
+            var period = "<p>表示期間<br>" + res[2] + "~" + res[3] + "</p>";
+            $('#table-display').append(period);
+            $('#table-display').append('<table class="table-content"></table>');
+            $('.table-content').append(th);
+            for (let i = 0; i < res[4].length; i++) {
+                var td = "<tr><td>" + res[4][i] + "</td><td>" + res[5][i] + "</td></tr>";
+                $('.table-content').append(td);
+            }
+
+        });
+    } else {
+        var error = "<p>検索結果がありません</p>";
+        var error_if="<p>指定した組は正しいですか？</p>";
+            $('#table-display').append(error);
+            $('#table-display').append(error_if);
+
+
+    }
+}
+//失敗時
+function onFailure_leaving(res) {
+$('.modal__content').css('overflow','scroll');
+    var target = document.getElementById("fadeLayer_impression");
+    $('.loading').fadeOut();
+    target.style.visibility = "hidden";
+    $('.click-once').css('pointer-events','auto');
+    alert(res);
+    return false;
+}
+
+</script>
